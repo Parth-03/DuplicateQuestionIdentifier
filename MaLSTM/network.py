@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.nn.utils.rnn import pack_sequence
+import gensim
 
 # LSTM architecture used as a component of the Siamese network
 class LSTM(nn.Module):
@@ -13,9 +14,17 @@ class LSTM(nn.Module):
         self.vocab_size = config.vocab_size
 
         # make embedding matrix
-        self.word_embs = nn.Embedding(
-            num_embeddings=self.vocab_size,
-            embedding_dim=self.embedding_dim, )
+
+        # self.word_embs = nn.Embedding(
+        #     num_embeddings=self.vocab_size,
+        #     embedding_dim=self.embedding_dim, )
+
+        # Load in Word2Vec as embeddings for model
+        word2vec_path = "Users/jakobherlitz/Downloads/GoogleNews-vectors-negative300.bin.gz"  # change this to wherever it is on your computer
+        model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_path, binary=True)
+        weights = torch.FloatTensor(model.vectors)
+        self.word_embs = nn.Embedding.from_pretrained(weights)
+
         self.lstm = nn.LSTM(
             input_size=self.embedding_dim,
             hidden_size=self.hidden_dim)
