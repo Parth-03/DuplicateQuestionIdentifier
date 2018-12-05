@@ -6,7 +6,7 @@ import gensim
 
 # LSTM architecture used as a component of the Siamese network
 class LSTM(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, model):
         super(LSTM, self).__init__()
 
         self.embedding_dim = config.embedding_dim
@@ -20,9 +20,7 @@ class LSTM(nn.Module):
         #     embedding_dim=self.embedding_dim, )
 
         # Load in Word2Vec as embeddings for model
-        word2vec_path = "Users/jakobherlitz/Downloads/GoogleNews-vectors-negative300.bin.gz"  # change this to wherever it is on your computer
-        model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_path, binary=True)
-        weights = torch.FloatTensor(model.vectors)
+        weights = torch.FloatTensor(model.vectors)[:, :config.embedding_dim]
         self.word_embs = nn.Embedding.from_pretrained(weights)
 
         self.lstm = nn.LSTM(
@@ -41,11 +39,11 @@ class LSTM(nn.Module):
 
 
 class SiameseLSTM(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, model):
         super(SiameseLSTM, self).__init__()
 
         # TODO configuration
-        self.encoder = LSTM(config)
+        self.encoder = LSTM(config, model)
 
 
     def encoder_params(self):
@@ -53,17 +51,17 @@ class SiameseLSTM(nn.Module):
 
 
     def forward(self, batch, targets):
-        batch_size = len(batch)
         h1 = self.encoder.init_hidden()
         h2 = self.encoder.init_hidden()
 
-        pred = []
-        for q_pair in batch:
+        pred = torch.zeros(len(batch))
+        for i, q_pair in enumerate(batch):
             q1, q2 = q_pair
             for w in q1:
                 out1, h1 = self.encoder(w, h1)
             for w in q2:
                 out2, h2 = self.encoder(w, h2)
-            prediction = torch.exp(-torch.norm((h1 - h2), 1))
-            pred.append(prediction)
+            prediction = torch.exp(-torch.norm((h1[0] - h2[0]), 1))
+            pred[i] = prediction
 
+        return pred
