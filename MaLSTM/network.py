@@ -29,8 +29,8 @@ class LSTM(nn.Module):
 
     def init_hidden(self):
         # Initialize hidden state (num_layers * num_directions, batch, hidden_size)
-        return (torch.zeros(1, 1, self.hidden_dim),
-                torch.zeros(1, 1, self.hidden_dim))
+        return (torch.randn(1, 1, self.hidden_dim),
+                torch.randn(1, 1, self.hidden_dim))
 
     def forward(self, input, h):
         word_embedding = self.word_embs(input).view(1, 1, -1)
@@ -45,10 +45,8 @@ class SiameseLSTM(nn.Module):
         # TODO configuration
         self.encoder = LSTM(config, model)
 
-
     def encoder_params(self):
         return self.encoder.parameters()
-
 
     def forward(self, batch, targets):
         h1 = self.encoder.init_hidden()

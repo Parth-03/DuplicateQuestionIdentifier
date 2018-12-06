@@ -6,7 +6,7 @@ class Config:
 
         self.max_sentence_length = 30
 
-        self.embedding_dim = 60
-        self.hidden_dim = 10
+        self.embedding_dim = 300
+        self.hidden_dim = 50
         self.batch_size = 16
         self.vocab_size = vocab_size

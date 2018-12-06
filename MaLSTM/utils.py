@@ -1,3 +1,4 @@
+import random
 from collections import defaultdict
 import pickle as pkl
 import torch
@@ -32,6 +33,7 @@ class Dataset:
 
         # Dict of words to index in the complete data set
         self.vocab = {}
+        self.id2word = {}
         # Dict of question id to word index sequence in the question
         self.qid_map = {}
 
@@ -48,11 +50,19 @@ class Dataset:
     def get_batches(self, batch_size, train_size=None):
         if not train_size:
             train_size = len(self.train)
+        combined = list(zip(self.train[:train_size], self.labels[:train_size]))
+        random.shuffle(combined)
+        self.train[:train_size], self.labels[:train_size] = zip(*combined)
         for start in range(0, train_size, batch_size):
             batch = [(torch.LongTensor(self.qid_map[q1]), torch.LongTensor(self.qid_map[q2])) for q1, q2 in
                      self.train[start:start + batch_size]]
             targets = torch.FloatTensor(self.labels[start:start + batch_size])
             yield batch, targets
+
+    def get_test_data(self, start, total):
+        test = [(torch.LongTensor(self.qid_map[q1]), torch.LongTensor(self.qid_map[q2])) for q1, q2 in self.train[start:start+total]]
+        targets = torch.FloatTensor(self.labels[start:start + total])
+        return test, targets
 
     def initialize_q_map(self, train_f):
         with codecs.open(train_f, encoding='utf-8') as f:
@@ -74,6 +84,7 @@ class Dataset:
         not_found = defaultdict(int)
         upper_found = defaultdict(int)
         lower_found = defaultdict(int)
+        title_found = defaultdict(int)
         for qid, q in self.qid_map.items():
             for token in q:
                 if token not in self.vocab:
@@ -84,12 +95,15 @@ class Dataset:
                         elif token.upper() in self.model.vocab:
                             token = token.upper()
                             upper_found[token] += 1
+                        elif token.title() in self.model.vocab:
+                            token = token.title()
+                            title_found[token] += 1
                         else:
                             not_found[token] += 1
                             continue
                     self.vocab[token] = self.model.vocab[token].index
         print('Vocabulary built! Size:', len(self.vocab))
-        print('not found {} upper found {} lower found {}'.format(len(not_found), len(upper_found), len(lower_found)))
+        print('not found {} upper found {} lower found {} title found {}'.format(len(not_found), len(upper_found), len(lower_found), len(title_found)))
 
     def map_qids(self):
         for qid, question in self.qid_map.items():
