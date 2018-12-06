@@ -63,20 +63,21 @@ f1 = []
 prec = []
 recall = []
 for thresh in xp:
-    x = binarize(preds, thresh, copy=True)
-    f1.append(met.f1_score(targets, x))
+    x = binarize(preds, thresh, copy=True)  # from sklearn.preprocessing import binarize
+    f1.append(met.f1_score(targets, x))     # import sklearn.metrics as met
     acc.append(met.accuracy_score(targets, x))
     prec.append(met.precision_score(targets, x))
     recall.append(met.recall_score(targets, x))
 
-with open('precision.pkl', 'wb') as file:
-    pkl.dump(prec, file)
-with open('recall.pkl', 'wb') as file:
-    pkl.dump(recall, file)
+# with open('precision.pkl', 'wb') as file:
+#     pkl.dump(prec, file)
+# with open('recall.pkl', 'wb') as file:
+#     pkl.dump(recall, file)
 print(max(acc), acc.index(max(acc)), acc[f1.index(max(f1))])
 print(max(f1), f1.index(max(f1)), f1[acc.index(max(acc))])
 fig = plt.figure()
 ax = fig.add_subplot(1, 1, 1)
-# ax.plot(xp, acc, 'r', xp, f1, 'b')
-ax.plot(recall, prec)
+ax.plot(xp, acc, 'r', xp, f1, 'b')
+ax.grid(True)
+# ax.plot(recall, prec)
 plt.show()
