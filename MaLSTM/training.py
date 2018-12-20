@@ -16,8 +16,8 @@ rnn = SiameseLSTM(config, train_data.model)
 
 loss_function = nn.BCELoss()
 optimizer = optim.Adadelta(rnn.encoder_params())
-num_epochs = 50
-train_size = 40000
+num_epochs = 100
+train_size = 80000
 
 for epoch in range(num_epochs):
     start_time = timeit.default_timer()
@@ -33,7 +33,7 @@ for epoch in range(num_epochs):
         torch.nn.utils.clip_grad_norm_(rnn.encoder_params(), 0.25)
         optimizer.step()  # updates parameters using gradients
 
-        if batch_num % 250 == 0:
+        if batch_num % 500 == 0:
             print('Batch number: {}, batch loss: {}, epoch loss {}'.format(batch_num, batch_loss, epoch_loss))
         batch_num += 1
 
@@ -47,7 +47,7 @@ for epoch in range(num_epochs):
             'optimizer_state_dict': optimizer.state_dict(),
             'config': config,
             'train_size': train_size
-        }, 'C:\\Users\\sanujb\\PycharmProjects\\CS585_FinalProject\\MaLSTM\\data\\model2.pt')
+        }, 'C:\\Users\\sanujb\\PycharmProjects\\CS585_FinalProject\\MaLSTM\\data\\model3.pt')
 #
 # rnn.encoder.eval()
 # test, targets = train_data.get_test_data(5000,1000)

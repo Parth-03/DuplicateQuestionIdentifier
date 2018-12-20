@@ -8,5 +8,5 @@ class Config:
 
         self.embedding_dim = 300
         self.hidden_dim = 50
-        self.batch_size = 16
+        self.batch_size = 64
         self.vocab_size = vocab_size
