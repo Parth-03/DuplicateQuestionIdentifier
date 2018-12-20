@@ -12,7 +12,7 @@ remove_nonAlphanumeric = re.compile('([^\s\w]|_)+')
 # %load C:\Users\sanuj\PycharmProjects\NLP\final\MaLSTM\utils.py
 # Creates question and token mappings for use in LSTM
 class Dataset:
-    def __init__(self, train_file, model=None):
+    def __init__(self, train_file, model=None, test = False):
         print('Building data for use in LSTM using', train_file.split('/')[-1])
         word2vec_path = 'GoogleNews-vectors-negative300.bin'
         if not model:
@@ -26,6 +26,8 @@ class Dataset:
                            'just', 'so', 'than', 'such', 'both', 'through', 'about', 'for', 'is', 'of', 'while',
                            'during', 'to', 'What', 'Which',
                            'Is', 'If', 'While', 'This']
+
+        self.sentences = []
         # List of (qid1, qid2) instances
         self.train = []
         # List of labels corresponding to train data
@@ -39,7 +41,7 @@ class Dataset:
 
         # Initializes with qid -> list of tokens
         print('Preprocessing sentences..')
-        self.initialize_q_map(train_file)
+        self.initialize_q_map(train_file, test)
         # Builds vocabulary from tokens in qids_map
         print('Building Vocab...')
         self.build_vocab()
@@ -62,9 +64,9 @@ class Dataset:
     def get_test_data(self, start, total):
         test = [(torch.LongTensor(self.qid_map[q1]), torch.LongTensor(self.qid_map[q2])) for q1, q2 in self.train[start:start+total]]
         targets = torch.FloatTensor(self.labels[start:start + total])
-        return test, targets
+        return test, targets, self.sentences[start:start+total]
 
-    def initialize_q_map(self, train_f):
+    def initialize_q_map(self, train_f, test):
         with codecs.open(train_f, encoding='utf-8') as f:
             reader = csv.reader(f, delimiter=',')
             next(reader)
@@ -78,6 +80,9 @@ class Dataset:
                     self.qid_map[qid1] = self.preprocess_sentence(q1)
                 if qid2 not in self.qid_map:
                     self.qid_map[qid2] = self.preprocess_sentence(q2)
+
+                if test:
+                    self.sentences.append((q1, self.qid_map[qid1], q2, self.qid_map[qid2]))
         print('Q map initialized!')
 
     def build_vocab(self):
@@ -88,19 +93,6 @@ class Dataset:
         for qid, q in self.qid_map.items():
             for token in q:
                 if token not in self.vocab:
-                    if token not in self.model.vocab:
-                        if token.lower() in self.model.vocab:
-                            token = token.lower()
-                            lower_found[token] += 1
-                        elif token.upper() in self.model.vocab:
-                            token = token.upper()
-                            upper_found[token] += 1
-                        elif token.title() in self.model.vocab:
-                            token = token.title()
-                            title_found[token] += 1
-                        else:
-                            not_found[token] += 1
-                            continue
                     self.vocab[token] = self.model.vocab[token].index
         print('Vocabulary built! Size:', len(self.vocab))
         print('not found {} upper found {} lower found {} title found {}'.format(len(not_found), len(upper_found), len(lower_found), len(title_found)))
@@ -113,4 +105,22 @@ class Dataset:
         q = remove_nonAlphanumeric.sub(' ', q)
         q = q.split()
         q = [w for w in q if w not in self.stop_words]
-        return q
+        cleaned_q = []
+        for token in q:
+            if token in self.stop_words:
+                continue
+            if token not in self.model.vocab:
+                if token.lower() in self.model.vocab:
+                    token = token.lower()
+                    cleaned_q.append(token)
+                elif token.upper() in self.model.vocab:
+                    token = token.upper()
+                    cleaned_q.append(token)
+                elif token.title() in self.model.vocab:
+                    token = token.title()
+                    cleaned_q.append(token)
+                else:
+                    continue
+            else:
+                cleaned_q.append(token)
+        return cleaned_q

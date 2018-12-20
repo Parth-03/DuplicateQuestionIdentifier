@@ -24,7 +24,7 @@ for epoch in range(num_epochs):
     epoch_loss = 0
     batch_num = 1
     for batch, targets in train_data.get_batches(config.batch_size, train_size):
-        preds = rnn(batch, targets)
+        preds = rnn(batch)
         batch_loss = loss_function(preds, targets)
         epoch_loss += batch_loss
 
@@ -33,7 +33,7 @@ for epoch in range(num_epochs):
         torch.nn.utils.clip_grad_norm_(rnn.encoder_params(), 0.25)
         optimizer.step()  # updates parameters using gradients
 
-        if batch_num % 500 == 0:
+        if batch_num % 100 == 0:
             print('Batch number: {}, batch loss: {}, epoch loss {}'.format(batch_num, batch_loss, epoch_loss))
         batch_num += 1
 

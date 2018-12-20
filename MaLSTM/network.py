@@ -48,7 +48,7 @@ class SiameseLSTM(nn.Module):
     def encoder_params(self):
         return self.encoder.parameters()
 
-    def forward(self, batch, targets):
+    def forward(self, batch):
         h1 = self.encoder.init_hidden()
         h2 = self.encoder.init_hidden()
 

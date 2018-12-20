@@ -16,7 +16,7 @@ def test():
 
     word2vec_path = "C:\\Users\\sanujb\\PycharmProjects\\CS585_FinalProject\\MaLSTM\\data\\GoogleNews-vectors-negative300.bin"
     model = gensim.models.KeyedVectors.load_word2vec_format(word2vec_path, binary=True)
-    train_data = Dataset('C:\\Users\\sanujb\\PycharmProjects\\CS585_FinalProject\\MaLSTM\\data\\train.csv', model)
+    train_data = Dataset('C:\\Users\\sanujb\\PycharmProjects\\CS585_FinalProject\\MaLSTM\\data\\train.csv', model, test=True)
     config = Config(len(train_data.vocab))
     rnn = SiameseLSTM(config, train_data.model)
 
@@ -32,22 +32,35 @@ def test():
     print('Loaded model with {} epochs'.format(checkpoint['epoch']))
 
     test_size = 20000
-    test, targets = train_data.get_test_data(test_start, test_size)
-    preds = rnn(test, targets)
+    test, targets, sentences = train_data.get_test_data(test_start, test_size)
+    preds = rnn(test)
     print(loss_function(preds, targets))
     correct = 0
     for i in range(test_size):
         if targets[i] == 1:
-            if preds[i] > 0.5:
+            if preds[i] > 0.419:
                 correct += 1
-        if targets[i] == 0:
-            if preds[i] <= 0.5:
+            else:
+                print(i, 'incorrect - FN')
+                for k in sentences[i]:
+                    print(k)
+                print('\n')
+        else:
+            if preds[i] <= 0.419:
                 correct += 1
+            else:
+                print(i, 'incorrect - FP')
+                for k in sentences[i]:
+                    print(k)
+                print('\n')
     print(correct)
     with open('pred3.pkl', 'wb') as file:
         pkl.dump(preds, file)
     with open('target3.pkl', 'wb') as file:
         pkl.dump(targets, file)
+
+    with open('sentences.pkl', 'wb') as file:
+        pkl.dump(sentences, file)
 
 
 def plot():
@@ -85,5 +98,5 @@ def plot():
     ax.plot(xp, recall, 'yellow', xp, prec, 'green')
     plt.show()
 
-# test()
-plot()
+test()
+# plot()
