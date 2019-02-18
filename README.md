@@ -5,4 +5,4 @@ Developed by\:
 Joanna Olson\
 Sanuj Bhatia\
 Parth Goel\
-Jakob Herlitz\
+Jakob Herlitz
